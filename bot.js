@@ -30,6 +30,26 @@ let getDayName = (dayIndex) => {
   return days[dayIndex];
 };
 
+let getNextLesson = (schedule, date) => {
+  const currentTime = date.getHours() * 60 + date.getMinutes();
+  
+  for (let lesson of schedule["Пара"]) {
+    const [startHour, startMin] = lesson["Час"]
+        .split("-")[0]
+        .trim()
+        .split(":")
+        .map(Number);
+    const startTime = startHour * 60 + startMin;
+    
+    if (currentTime < startTime) {
+      return lesson;
+    }
+  }
+
+  return null;
+};
+
+
 let getCurrentLesson = (schedule, date) => {
   console.log("Checking current lesson for schedule:", schedule);
   if (!schedule) return null;
@@ -129,6 +149,7 @@ bot.onText(/\/start/, (msg) => {
     /current - інформація про поточну пару
     /schedule (день тижня) - пари на конкретний день
     /timeLeft - час до кінця пари
+    /next - наступна пара
     Баг репорт -> @notdotaenjoyer_666 
     `;
   bot.sendMessage(chatId, message);
@@ -162,6 +183,21 @@ bot.onText(/\/timeLeft/, (msg) => {
   } else {
     bot.sendMessage(chatId, "Зараз відсутні пари");
   }
+});
+
+bot.onText(/\/next/, (msg) => {
+  const chatId = msg.chat.id;
+  const currentWeek = getCurrentWeek();
+  const date = new Date();
+  const requestedDay = getDayName(date.getDay());
+  const dailySchedule = scheduleData[requestedDay]
+    ? scheduleData[requestedDay][currentWeek]
+    : null;
+  const nextLesson = getNextLesson(dailySchedule, date);
+  
+  nextLesson
+    ? bot.sendMessage(chatId, formatLesson(nextLesson))
+    : bot.sendMessage(chatId, "Немає наступних пар сьогодні");
 });
 
 
