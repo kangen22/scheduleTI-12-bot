@@ -31,24 +31,35 @@ let getDayName = (dayIndex) => {
 };
 
 let getCurrentLesson = (schedule, date) => {
+  console.log("Checking current lesson for schedule:", schedule);
   if (!schedule) return null;
   const currentTime = date.getHours() * 60 + date.getMinutes();
+  console.log("Current time in minutes:", currentTime);
+  
   return schedule["Пара"].find((lesson) => {
-    const [startHour, startMin] = lesson["Час"]
-      .split("-")[0]
-      .trim()
-      .split(":")
-      .map(Number);
-    const [endHour, endMin] = lesson["Час"]
-      .split("-")[1]
-      .trim()
-      .split(":")
-      .map(Number);
-    const startTime = startHour * 60 + startMin;
-    const endTime = endHour * 60 + endMin;
-    return currentTime >= startTime && currentTime <= endTime;
+      const [startHour, startMin] = lesson["Час"]
+          .split("-")[0]
+          .trim()
+          .split(":")
+          .map(Number);
+      const [endHour, endMin] = lesson["Час"]
+          .split("-")[1]
+          .trim()
+          .split(":")
+          .map(Number);
+      const startTime = startHour * 60 + startMin;
+      const endTime = endHour * 60 + endMin;
+      
+      console.log(`Checking lesson from ${startTime} to ${endTime}`);
+      
+      const isLessonCurrent = currentTime >= startTime && currentTime <= endTime;
+      console.log(`Is current lesson: ${isLessonCurrent}`); // New log
+
+      return isLessonCurrent;
   });
 };
+
+
 
 let getCurrentWeek = () => {
   const now = new Date();
@@ -118,19 +129,42 @@ bot.onText(/\/start/, (msg) => {
     /current - інформація про поточну пару
     /schedule (день тижня) - пари на конкретний день
     /timeLeft - час до кінця пари
+    Баг репорт -> @notdotaenjoyer_666 
     `;
   bot.sendMessage(chatId, message);
 });
 
 bot.onText(/\/timeLeft/, (msg) => {
+  console.log("Received /timeLeft command");
   const chatId = msg.chat.id;
   const date = new Date();
+  console.log("Current date:", date);
+
   const currentDay = getDayName(date.getDay());
-  const currentSchedule = scheduleData[currentDay];
-  const currentLesson = getCurrentLesson(currentSchedule, date);
-  const timeLeft = getTimeLeftForLesson(currentLesson, date, currentSchedule);
-  bot.sendMessage(chatId, timeLeft);
+  const currentWeek = getCurrentWeek();
+  const isWeek1 = currentWeek === 'Тиждень1';
+  
+  const weekSchedule = isWeek1 ? scheduleData[currentDay]['Тиждень1'] : scheduleData[currentDay]['Тиждень2'];
+  const currentLesson = getCurrentLesson(weekSchedule, date);
+
+  if (currentLesson) {
+    const lessonName = currentLesson['Назва пари'];
+    const endTimeString = currentLesson['Час'].split('-')[1].trim();
+    const endTime = new Date(`${date.toDateString()} ${endTimeString}:00`);
+    const timeDifferenceInMs = endTime - date;
+    const timeLeftInMinutes = Math.round(timeDifferenceInMs / 60000);
+
+    if (timeLeftInMinutes > 0) {
+      bot.sendMessage(chatId, `До кінця пари залишилось ${timeLeftInMinutes} minutes`);
+    } else {
+      bot.sendMessage(chatId, `${lessonName} Закінчилась`);
+    }
+  } else {
+    bot.sendMessage(chatId, "Зараз відсутні пари");
+  }
 });
+
+
 
 bot.onText(/\/today/, (msg) => {
   const chatId = msg.chat.id;
@@ -168,9 +202,8 @@ bot.onText(/\/current/, (msg) => {
     : null;
   const currentLesson = getCurrentLesson(dailySchedule, date);
   currentLesson
-    ? bot.sendMessage(chatId, formatLesson(currentLesson), {
-        parse_mode: `MarkdownV2`,
-      })
+    ? bot.sendMessage(chatId, formatLesson(currentLesson), 
+      )
     : bot.sendMessage(chatId, "Пари відсутні");
 });
 
