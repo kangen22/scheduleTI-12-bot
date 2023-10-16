@@ -1,10 +1,9 @@
 const TelegramApi = require("node-telegram-bot-api");
-const scheduleData = require("./schedule");
-const token = "6540202655:AAECboxcNpZWV9JG8VPY_wuvNaBNFSVeoyE";
-const bot = new TelegramApi(token, { polling: true });
-
+const scheduleData = require(__dirname + "/local_DB/schedule.js");
 require("dotenv").config();
 
+const token = process.env.TELEGRAM_BOT_TOKEN;
+const bot = new TelegramApi(token, { polling: true });
 
 let formatSchedule = (day, schedule) => {
   const lessons = schedule["Пара"]
@@ -35,7 +34,6 @@ let getDayName = (dayIndex) => {
 
 let getNextLesson = (schedule, date) => {
   const currentTime = date.getHours() * 60 + date.getMinutes();
-  
   for (let lesson of schedule["Пара"]) {
     const [startHour, startMin] = lesson["Час"]
         .split("-")[0]
