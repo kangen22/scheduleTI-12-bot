@@ -3,11 +3,14 @@ const scheduleData = require("./schedule");
 const token = "6540202655:AAECboxcNpZWV9JG8VPY_wuvNaBNFSVeoyE";
 const bot = new TelegramApi(token, { polling: true });
 
+require("dotenv").config();
+
+
 let formatSchedule = (day, schedule) => {
   const lessons = schedule["Пара"]
     .map(
       (lesson) =>
-        `Назва пари: ${lesson["Назва пари"] || "Відсутня"}
+`Назва пари: ${lesson["Назва пари"] || "Відсутня"}
 Пара по порядку: ${lesson["Пара по порядку"]}
 Посилання на пару: ${lesson["Посилання на пару"] || "Не вказано"}
 Викладач: ${lesson["Викладач"] || "Не вказано"}
@@ -23,7 +26,7 @@ let getDayName = (dayIndex) => {
     "Понеділок",
     "Вівторок",
     "Середа",
-    "Четвер",
+    "Четверг",
     "П'ятниця",
     "Субота",
   ];
@@ -51,10 +54,8 @@ let getNextLesson = (schedule, date) => {
 
 
 let getCurrentLesson = (schedule, date) => {
-  console.log("Checking current lesson for schedule:", schedule);
   if (!schedule) return null;
   const currentTime = date.getHours() * 60 + date.getMinutes();
-  console.log("Current time in minutes:", currentTime);
   
   return schedule["Пара"].find((lesson) => {
       const [startHour, startMin] = lesson["Час"]
@@ -69,16 +70,10 @@ let getCurrentLesson = (schedule, date) => {
           .map(Number);
       const startTime = startHour * 60 + startMin;
       const endTime = endHour * 60 + endMin;
-      
-      console.log(`Checking lesson from ${startTime} to ${endTime}`);
-      
       const isLessonCurrent = currentTime >= startTime && currentTime <= endTime;
-      console.log(`Is current lesson: ${isLessonCurrent}`); // New log
-
       return isLessonCurrent;
   });
 };
-
 
 
 let getCurrentWeek = () => {
@@ -92,52 +87,19 @@ let getCurrentWeek = () => {
     (daysSinceStartOfYear + startOfYear.getDay() + 1) / 7
   );
 
-  return weekNumber % 2 === 0 ? "Тиждень2" : "Тиждень1";
+  const adjustedWeekNumber = weekNumber + 1;
+  return adjustedWeekNumber % 2 === 0 ? "Тиждень2" : "Тиждень1";
 };
 
-let getTimeLeftForLesson = (lesson, date, currentSchedule) => {
-  if (!lesson) return "Пари відсутні";
 
-  const [endHour, endMin] = lesson["Час"]
-    .split("-")[1]
-    .trim()
-    .split(":")
-    .map(Number);
-  const endTime = endHour * 60 + endMin;
-
-  const currentTime = date.getHours() * 60 + date.getMinutes();
-  const timeLeft = endTime - currentTime;
-
-  if (timeLeft <= 0) {
-    const nextLessonIndex =
-      currentSchedule["Пара"].findIndex((l) => l === lesson) + 1;
-    const nextLesson = currentSchedule["Пара"][nextLessonIndex];
-    if (nextLesson) {
-      const [nextStartHour, nextStartMin] = nextLesson["Час"]
-        .split("-")[0]
-        .trim()
-        .split(":")
-        .map(Number);
-      const nextStartTime = nextStartHour * 60 + nextStartMin;
-      const breakTime = nextStartTime - endTime;
-      return `Перерва: ${breakTime} хв. До наступної пари залишилось ${
-        breakTime - (currentTime - endTime)
-      } хв.`;
-    } else {
-      return "Пара завершилась";
-    }
-  }
-  const hoursLeft = Math.floor(timeLeft / 60);
-  const minutesLeft = timeLeft % 60;
-  return `До кінця пари: ${hoursLeft} год. ${minutesLeft} хв.`;
-};
 
 let formatLesson = (lesson) => {
-  return `Назва пари: ${lesson["Назва пари"] || "Відсутня"}
-    Пара по порядку: ${lesson["Пара по порядку"]}
-    Посилання на пару: ${lesson["Посилання на пару"] || "Не вказано"}
-    Викладач: ${lesson["Викладач"] || "Не вказано"}
-    Час: ${lesson["Час"] || "Не вказано"}`;
+  return `
+  Назва пари: ${lesson["Назва пари"] || "Відсутня"}
+Пара по порядку: ${lesson["Пара по порядку"]}
+Посилання на пару: ${lesson["Посилання на пару"] || "Не вказано"}
+Викладач: ${lesson["Викладач"] || "Не вказано"}
+Час: ${lesson["Час"] || "Не вказано"}`;
 };
 
 bot.onText(/\/start/, (msg) => {
@@ -148,23 +110,21 @@ bot.onText(/\/start/, (msg) => {
     /tomorrow - розклад на завтра
     /current - інформація про поточну пару
     /schedule (день тижня) - пари на конкретний день
-    /timeLeft - час до кінця пари
+    /timeleft - час до кінця пари
     /next - наступна пара
     Баг репорт -> @notdotaenjoyer_666 
     `;
   bot.sendMessage(chatId, message);
 });
 
-bot.onText(/\/timeLeft/, (msg) => {
+bot.onText(/\/timeleft/, (msg) => {
   console.log("Received /timeLeft command");
   const chatId = msg.chat.id;
   const date = new Date();
-  console.log("Current date:", date);
-
   const currentDay = getDayName(date.getDay());
   const currentWeek = getCurrentWeek();
   const isWeek1 = currentWeek === 'Тиждень1';
-  
+
   const weekSchedule = isWeek1 ? scheduleData[currentDay]['Тиждень1'] : scheduleData[currentDay]['Тиждень2'];
   const currentLesson = getCurrentLesson(weekSchedule, date);
 
@@ -176,7 +136,7 @@ bot.onText(/\/timeLeft/, (msg) => {
     const timeLeftInMinutes = Math.round(timeDifferenceInMs / 60000);
 
     if (timeLeftInMinutes > 0) {
-      bot.sendMessage(chatId, `До кінця пари залишилось ${timeLeftInMinutes} minutes`);
+      bot.sendMessage(chatId, `До кінця пари залишилось ${timeLeftInMinutes} хвилин`);
     } else {
       bot.sendMessage(chatId, `${lessonName} Закінчилась`);
     }
@@ -262,7 +222,7 @@ bot.onText(/\/schedule/, (msg, match) => {
 
 bot.on("callback_query", (query) => {
   const chatId = query.message.chat.id;
-  const requestedDay = query.data; // день тижня, який користувач обрав
+  const requestedDay = query.data; 
   const currentWeek = getCurrentWeek();
   const scheduleForDay = scheduleData[requestedDay]
     ? scheduleData[requestedDay][currentWeek]
