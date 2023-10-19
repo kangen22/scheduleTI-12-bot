@@ -1,7 +1,7 @@
 const TelegramApi = require("node-telegram-bot-api");
 const scheduleData = require(__dirname + "/local_DB/schedule.js");
-const current = require(__dirname + "/schedule_modules/get.js");
-const schedule = require(__dirname + "/schedule_modules/scheduleForm");
+const current = require(__dirname + "/lib/get.js");
+const schedule = require(__dirname + "/lib/scheduleForm");
 require("dotenv").config();
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -65,7 +65,7 @@ bot.onText(/\/next/, (msg) => {
   const nextLesson = current.getNextLesson(dailySchedule, date);
 
   nextLesson
-    ? bot.sendMessage(chatId, current.formatLesson(nextLesson))
+    ? bot.sendMessage(chatId, schedule.formatLesson(nextLesson))
     : bot.sendMessage(chatId, "Немає наступних пар сьогодні");
 });
 
@@ -110,7 +110,7 @@ bot.onText(/\/current/, (msg) => {
     : null;
   const currentLesson = current.getCurrentLesson(dailySchedule, date);
   currentLesson
-    ? bot.sendMessage(chatId, current.formatLesson(currentLesson))
+    ? bot.sendMessage(chatId, schedule.formatLesson(currentLesson))
     : bot.sendMessage(chatId, "Пари відсутні");
 });
 
