@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint bot.js lib"
   },
   "keywords": [],
   "author": "",
@@ -14,5 +15,9 @@
     "env": "^0.0.2",
     "node-telegram-bot-api": "^0.63.0",
     "nodemon": "^3.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.52.0",
+    "eslint-config-google": "^0.14.0"
   }
 }
