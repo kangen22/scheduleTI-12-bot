@@ -4,7 +4,7 @@ const current = require(__dirname + '/lib/get.js');
 const schedule = require(__dirname + '/lib/scheduleForm');
 require('dotenv').config();
 
-const token = process.env.TELEGRAM_BOT_TOKEN;
+const token = process.env.TELEGRAM_KEY;
 const bot = new TelegramApi(token, {polling: true});
 
 bot.onText(/\/start/, (msg) => {
@@ -100,6 +100,17 @@ bot.onText(/\/tomorrow/, (msg) => {
     bot.sendMessage(chatId, 'Пари відсутні');
 });
 
+bot.onText(/\/pizdec/, (msg) => {
+  const chatId = msg.chat.id;
+  const sessionStartDate = new Date(2024, 0, 8);
+  const currentDate = new Date();
+  const diffrenceInMilliseconds = sessionStartDate - currentDate;
+  const diffrenceInDays = Math.ceil(
+      diffrenceInMilliseconds / (1000 * 60 * 60 * 24));
+  bot.sendMessage(chatId, `Нам всім пиздець через 
+  ${diffrenceInDays} днів (екзамени)`);
+});
+
 bot.onText(/\/current/, (msg) => {
   const chatId = msg.chat.id;
   const currentWeek = current.getCurrentWeek();
@@ -112,6 +123,14 @@ bot.onText(/\/current/, (msg) => {
   currentLesson ?
     bot.sendMessage(chatId, schedule.formatLesson(currentLesson)) :
     bot.sendMessage(chatId, 'Пари відсутні');
+});
+
+
+bot.onText(/\/calendar/, (msg) => {
+  const chatId = msg.chat.id;
+  const photo = __dirname + '/src/calendar.jpg';
+  console.log(photo);
+  bot.sendPhoto(chatId, photo, {caption: 'Календар - 2023/2024'});
 });
 
 bot.onText(/\/schedule/, (msg, match) => {
