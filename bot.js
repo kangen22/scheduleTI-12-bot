@@ -1,11 +1,16 @@
-const TelegramApi = require('node-telegram-bot-api');
-const scheduleData = require(__dirname + '/local_DB/schedule.js');
-const current = require(__dirname + '/lib/get.js');
-const schedule = require(__dirname + '/lib/scheduleForm');
-require('dotenv').config();
+import TelegramApi from 'node-telegram-bot-api'
+import dotenv from 'dotenv';
+import scheduleData from './local_DB/schedule.js';
+import { getCurrentWeek, getDayName, getCurrentLesson, getNextLesson } from './lib/get.js';
+import { formatLesson, formatSchedule } from './lib/scheduleForm.js';
+
+
+
+dotenv.config();
 
 const token = process.env.TELEGRAM_KEY;
 const bot = new TelegramApi(token, {polling: true});
+const schedule = scheduleData;
 
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
@@ -25,14 +30,14 @@ bot.onText(/\/start/, (msg) => {
 bot.onText(/\/timeleft/, (msg) => {
   const chatId = msg.chat.id;
   const date = new Date();
-  const currentDay = current.getDayName(date.getDay());
-  const currentWeek = current.getCurrentWeek();
+  const currentDay = getDayName(date.getDay());
+  const currentWeek = getCurrentWeek();
   const isWeek1 = currentWeek === 'Тиждень1';
 
   const weekSchedule = isWeek1 ?
     scheduleData[currentDay]['Тиждень1'] :
     scheduleData[currentDay]['Тиждень2'];
-  const currentLesson = current.getCurrentLesson(weekSchedule, date);
+  const currentLesson = getCurrentLesson(weekSchedule, date);
 
   if (currentLesson) {
     const lessonName = currentLesson['Назва пари'];
@@ -56,23 +61,23 @@ bot.onText(/\/timeleft/, (msg) => {
 
 bot.onText(/\/next/, (msg) => {
   const chatId = msg.chat.id;
-  const currentWeek = current.getCurrentWeek();
+  const currentWeek = getCurrentWeek();
   const date = new Date();
-  const requestedDay = current.getDayName(date.getDay());
+  const requestedDay = getDayName(date.getDay());
   const dailySchedule = scheduleData[requestedDay] ?
     scheduleData[requestedDay][currentWeek] :
     null;
-  const nextLesson = current.getNextLesson(dailySchedule, date);
+  const nextLesson = getNextLesson(dailySchedule, date);
 
   nextLesson ?
-    bot.sendMessage(chatId, schedule.formatLesson(nextLesson)) :
+    bot.sendMessage(chatId, formatLesson(nextLesson)) :
     bot.sendMessage(chatId, 'Немає наступних пар сьогодні');
 });
 
 bot.onText(/\/today/, (msg) => {
   const chatId = msg.chat.id;
-  const currentWeek = current.getCurrentWeek();
-  const requestedDay = current.getDayName(new Date().getDay());
+  const currentWeek = getCurrentWeek();
+  const requestedDay = getDayName(new Date().getDay());
   const weeklySchedule =
     scheduleData[requestedDay] && scheduleData[requestedDay][currentWeek] ?
       scheduleData[requestedDay][currentWeek] :
@@ -80,7 +85,7 @@ bot.onText(/\/today/, (msg) => {
   weeklySchedule ?
     bot.sendMessage(
         chatId,
-        schedule.formatSchedule(requestedDay, weeklySchedule),
+        formatSchedule(requestedDay, weeklySchedule),
     ) :
     bot.sendMessage(chatId, 'Пари відсутні');
 });
@@ -89,13 +94,13 @@ bot.onText(/\/tomorrow/, (msg) => {
   const chatId = msg.chat.id;
   const date = new Date();
   date.setDate(date.getDate() + 1);
-  const requestedDay = current.getDayName(date.getDay());
-  const currentWeek = current.getCurrentWeek();
+  const requestedDay = getDayName(date.getDay());
+  const currentWeek = getCurrentWeek();
   const weeklySchedule = scheduleData[requestedDay][currentWeek];
   weeklySchedule ?
     bot.sendMessage(
         chatId,
-        schedule.formatSchedule(requestedDay, weeklySchedule),
+        formatSchedule(requestedDay, weeklySchedule),
     ) :
     bot.sendMessage(chatId, 'Пари відсутні');
 });
@@ -113,15 +118,15 @@ bot.onText(/\/pizdec/, (msg) => {
 
 bot.onText(/\/current/, (msg) => {
   const chatId = msg.chat.id;
-  const currentWeek = current.getCurrentWeek();
+  const currentWeek = getCurrentWeek();
   const date = new Date();
-  const requestedDay = current.getDayName(date.getDay());
+  const requestedDay = getDayName(date.getDay());
   const dailySchedule = scheduleData[requestedDay] ?
     scheduleData[requestedDay][currentWeek] :
     null;
-  const currentLesson = current.getCurrentLesson(dailySchedule, date);
+  const currentLesson = getCurrentLesson(dailySchedule, date);
   currentLesson ?
-    bot.sendMessage(chatId, schedule.formatLesson(currentLesson)) :
+    bot.sendMessage(chatId, formatLesson(currentLesson)) :
     bot.sendMessage(chatId, 'Пари відсутні');
 });
 
@@ -153,14 +158,14 @@ bot.onText(/\/schedule/, (msg, match) => {
 bot.on('callback_query', (query) => {
   const chatId = query.message.chat.id;
   const requestedDay = query.data;
-  const currentWeek = current.getCurrentWeek();
+  const currentWeek = getCurrentWeek();
   const scheduleForDay = scheduleData[requestedDay] ?
     scheduleData[requestedDay][currentWeek] :
     null;
   if (scheduleForDay) {
     bot.sendMessage(
         chatId,
-        schedule.formatSchedule(requestedDay, scheduleForDay),
+        formatSchedule(requestedDay, scheduleForDay),
     );
   } else {
     bot.sendMessage(chatId, 'Пари відсутні');

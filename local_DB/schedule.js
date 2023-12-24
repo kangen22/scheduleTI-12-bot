@@ -234,4 +234,5 @@ const scheduleData = {
     },
 };
 
-module.exports = scheduleData;
+export default scheduleData
+// module.exports = scheduleData;
