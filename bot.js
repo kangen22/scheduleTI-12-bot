@@ -5,7 +5,6 @@ import { getCurrentWeek, getDayName, getCurrentLesson, getNextLesson } from './l
 import { formatLesson, formatSchedule } from './lib/scheduleForm.js';
 
 
-
 dotenv.config();
 
 const token = process.env.TELEGRAM_KEY;
