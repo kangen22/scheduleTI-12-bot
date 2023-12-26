@@ -89,6 +89,18 @@ connectToDataBase().then((accountCollection) => {
         }
     })
 
+    app.get('/schedule', async (req, res ) => {
+        console.log("clicked schedule")
+        try {
+            const documentToFind = {_id: new ObjectId("657dcf67998d133402eea11c")};
+            const cursor = accountCollection.find(documentToFind);
+            const result = await cursor.toArray();
+            res.json(result);
+        } catch (error) {
+            res.status(500).send(error);
+        }
+    })
+
 }).catch((error) => {
     console.log(error);
     process.exit(1);

@@ -1,6 +1,7 @@
 {
     "env": {
         "browser": true,
+        "sourceType": "module",
         "commonjs": true,
         "es2021": true
     },
