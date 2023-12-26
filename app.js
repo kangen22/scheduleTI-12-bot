@@ -1,4 +1,4 @@
-import {MongoClient} from 'mongodb';
+import { MongoClient, ObjectId } from 'mongodb';
 import express from 'express';
 import dotenv from 'dotenv';
 
@@ -8,10 +8,10 @@ dotenv.config();
 
 const app = express();
 const uri = process.env.ATLAS_URI
-const dbname = 'cluster0'
+const dbname = 'ITS_Schedule'
 const collection_name = 'TI-12';
 
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+const client = new MongoClient(uri);
 
 const connectToDataBase = async () => {
     try {
@@ -20,24 +20,80 @@ const connectToDataBase = async () => {
         return client.db(dbname).collection(collection_name);
     } catch (error) {
         console.log(error)
+        process.exit(1);
     }
-
 };
 
+connectToDataBase().then((accountCollection) => {
+    app.listen(port, () => {
+        console.log(`Server is running on port: ${port}`);
+    });
 
-const acconts = client.db("accounts").collection("accounts")
+    app.get('/today', async (req, res ) => {
+        console.log("clicked today")
+        try {
+            const documentToFind = {_id: new ObjectId("657dcf67998d133402eea11c")};
+            const cursor = accountCollection.find(documentToFind);
+            const result = await cursor.toArray();
+            res.json(result);
+        } catch (error) {
+            res.status(500).send(error);
+        }
+    });
 
+    app.get('/tomorrow', async (req, res ) => {
+        console.log("clicked tomorrow")
+        try {
+            const documentToFind = {_id: new ObjectId("657dcf67998d133402eea11c")};
+            const cursor = accountCollection.find(documentToFind);
+            const result = await cursor.toArray();
+            res.json(result);
+        } catch (error) {
+            res.status(500).send(error);
+        }
+    });
 
+    app.get('/next', async (req, res ) => {
+        console.log("clicked next")
+        try {
+            const documentToFind = {_id: new ObjectId("657dcf67998d133402eea11c")};
+            const cursor = accountCollection.find(documentToFind);
+            const result = await cursor.toArray();
+            res.json(result);
+        } catch (error) {
+            res.status(500).send(error);
+        }
+    });
 
-// app.get('/today', (req, res) => {
-//     console.log("clicked today")
-// })
+    app.get('/current', async (req, res ) => {
+        console.log("clicked current")
+        try {
+            const documentToFind = {_id: new ObjectId("657dcf67998d133402eea11c")};
+            const cursor = accountCollection.find(documentToFind);
+            const result = await cursor.toArray();
+            res.json(result);
+        } catch (error) {
+            res.status(500).send(error);
+        }
+    })
 
+    app.get('/timeleft', async (req, res ) => {
+        console.log("clicked timeleft")
+        try {
+            const documentToFind = {_id: new ObjectId("657dcf67998d133402eea11c")};
+            const cursor = accountCollection.find(documentToFind);
+            const result = await cursor.toArray();
+            res.json(result);
+        } catch (error) {
+            res.status(500).send(error);
+        }
+    })
 
-// app.listen(port, () => {
-//     console.log(`Server is running on port: ${port}`);
-// })
-// // 
+}).catch((error) => {
+    console.log(error);
+    process.exit(1);
+});
+
 
 
 
