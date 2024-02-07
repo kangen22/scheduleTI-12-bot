@@ -1,7 +1,7 @@
 import TelegramApi from 'node-telegram-bot-api'
 import fetch from 'node-fetch';
 import dotenv from 'dotenv';
-import scheduleData from './local_DB/schedule.js';
+// import scheduleData from './local_DB/schedule.js';
 import { getCurrentWeek, getDayName, getCurrentLesson, getNextLesson } from './lib/get.js';
 import { formatLesson, formatSchedule } from './lib/scheduleForm.js';
 
@@ -25,65 +25,66 @@ bot.onText(/\/start/, (msg) => {
   bot.sendMessage(chatId, message);
 });
 
-bot.onText(/\/timeleft/, (msg) => {
-  const chatId = msg.chat.id;
-  const date = new Date();
-  const currentDay = getDayName(date.getDay());
-  const currentWeek = getCurrentWeek();
-  const isWeek1 = currentWeek === 'Тиждень1';
-  const weekSchedule = isWeek1 ?
-    scheduleData[currentDay]['Тиждень1'] :
-    scheduleData[currentDay]['Тиждень2'];
-  const currentLesson = getCurrentLesson(weekSchedule, date);
-  if (currentLesson) {
-    const lessonName = currentLesson['Назва пари'];
-    const endTimeString = currentLesson['Час'].split('-')[1].trim();
-    const endTime = new Date(`${date.toDateString()} ${endTimeString}:00`);
-    const timeDifferenceInMs = endTime - date;
-    const timeLeftInMinutes = Math.round(timeDifferenceInMs / 60000);
+// bot.onText(/\/timeleft/, (msg) => {
+//   const chatId = msg.chat.id;
+//   const date = new Date();
+//   const currentDay = getDayName(date.getDay());
+//   const currentWeek = getCurrentWeek();
+//   const isWeek1 = currentWeek === 'Тиждень1';
+//   const weekSchedule = isWeek1 ?
+//     scheduleData[currentDay]['Тиждень1'] :
+//     scheduleData[currentDay]['Тиждень2'];
+//   const currentLesson = getCurrentLesson(weekSchedule, date);
+//   if (currentLesson) {
+//     const lessonName = currentLesson['Назва пари'];
+//     const endTimeString = currentLesson['Час'].split('-')[1].trim();
+//     const endTime = new Date(`${date.toDateString()} ${endTimeString}:00`);
+//     const timeDifferenceInMs = endTime - date;
+//     const timeLeftInMinutes = Math.round(timeDifferenceInMs / 60000);
 
-    if (timeLeftInMinutes > 0) {
-      bot.sendMessage(
-          chatId,
-          `До кінця пари залишилось ${timeLeftInMinutes} хвилин`,
-      );
-    } else {
-      bot.sendMessage(chatId, `${lessonName} Закінчилась`);
-    }
-  } else {
-    bot.sendMessage(chatId, 'Зараз відсутні пари');
-  }
-});
+//     if (timeLeftInMinutes > 0) {
+//       bot.sendMessage(
+//           chatId,
+//           `До кінця пари залишилось ${timeLeftInMinutes} хвилин`,
+//       );
+//     } else {
+//       bot.sendMessage(chatId, `${lessonName} Закінчилась`);
+//     }
+//   } else {
+//     bot.sendMessage(chatId, 'Зараз відсутні пари');
+//   }
+// });
 
-bot.onText(/\/next/, async (msg) => {
-  const chatId = msg.chat.id;
-  try {
-    const response = await fetch('http://localhost:3000/next');
-    if(!response.ok) {
-      throw new Error('Error fetching data');
-  } 
-  let data = await response.json();
-  let schedule = data[0];
-  const date = new Date();
-  const currentWeek = getCurrentWeek();
-  const requestedDay = getDayName(date.getDay());
-  const dailySchedule = schedule[requestedDay] ?
-    scheduleData[requestedDay][currentWeek] :
-    null;
-  const nextLesson = getNextLesson(dailySchedule, date);
-  nextLesson ?
-    bot.sendMessage(chatId, formatLesson(nextLesson)) :
-    bot.sendMessage(chatId, 'Немає наступних пар сьогодні');
-  }  catch (error) {
-    console.log(error);
-    bot.sendMessage(chatId, 'Пари відсутні');
-  }
-});
+// bot.onText(/\/next/, async (msg) => {
+//   const chatId = msg.chat.id;
+//   try {
+//     const response = await fetch('http://localhost:3000/next');
+//     if(!response.ok) {
+//       throw new Error('Error fetching data');
+//   } 
+//   let data = await response.json();
+//   let schedule = data[0];
+//   const date = new Date();
+//   const currentWeek = getCurrentWeek();
+//   const requestedDay = getDayName(date.getDay());
+//   const dailySchedule = schedule[requestedDay] ?
+//     scheduleData[requestedDay][currentWeek] :
+//     null;
+//   const nextLesson = getNextLesson(dailySchedule, date);
+//   nextLesson ?
+//     bot.sendMessage(chatId, formatLesson(nextLesson)) :
+//     bot.sendMessage(chatId, 'Немає наступних пар сьогодні');
+//   }  catch (error) {
+//     console.log(error);
+//     bot.sendMessage(chatId, 'Пари відсутні');
+//   }
+// });
 
 bot.onText(/\/today/, async (msg) => {
   const chatId = msg.chat.id;
   try {
     const response = await fetch('http://localhost:3000/today');
+    console.log(response);
     if (!response.ok) {
       throw new Error('Error fetching data');
     }
@@ -106,42 +107,45 @@ bot.onText(/\/today/, async (msg) => {
   }
 });
 
-bot.onText(/\/tomorrow/, async (msg) => {
-  const chatId = msg.chat.id;
-  try {
-    const response = await fetch('http://localhost:3000/tomorrow');
-    if (!response.ok) {
-      throw new Error('Error fetching data');
-    }
-    let data = await response.json();
-    let schedule = data[0]; 
-    const date = new Date();
-    date.setDate(date.getDate());
-    const requestedDay = getDayName(date.getDay() + 1);
-    const currentWeek = getCurrentWeek();
-    const weeklySchedule = schedule[requestedDay][currentWeek];
-      if (!weeklySchedule) {
-        bot.sendMessage(chatId, 'Пари відсутні');
-      } else {
-        const formattedSchedule = formatSchedule(requestedDay, weeklySchedule);
-        bot.sendMessage(chatId, formattedSchedule);
-      }
-  } catch (error) {
-    console.log(error);
-    bot.sendMessage(chatId, 'Пари відсутні');
-  }
-});
 
-bot.onText(/\/pizdec/, (msg) => {
-  const chatId = msg.chat.id;
-  const sessionStartDate = new Date(2024, 0, 8);
-  const currentDate = new Date();
-  const diffrenceInMilliseconds = sessionStartDate - currentDate;
-  const diffrenceInDays = Math.ceil(
-      diffrenceInMilliseconds / (1000 * 60 * 60 * 24));
-  bot.sendMessage(chatId, `Нам всім пиздець через 
-  ${diffrenceInDays} днів (екзамени)`);
-});
+
+
+// bot.onText(/\/tomorrow/, async (msg) => {
+//   const chatId = msg.chat.id;
+//   try {
+//     const response = await fetch('http://localhost:3000/tomorrow');
+//     if (!response.ok) {
+//       throw new Error('Error fetching data');
+//     }
+//     let data = await response.json();
+//     let schedule = data[0]; 
+//     const date = new Date();
+//     date.setDate(date.getDate());
+//     const requestedDay = getDayName(date.getDay() + 1);
+//     const currentWeek = getCurrentWeek();
+//     const weeklySchedule = schedule[requestedDay][currentWeek];
+//       if (!weeklySchedule) {
+//         bot.sendMessage(chatId, 'Пари відсутні');
+//       } else {
+//         const formattedSchedule = formatSchedule(requestedDay, weeklySchedule);
+//         bot.sendMessage(chatId, formattedSchedule);
+//       }
+//   } catch (error) {
+//     console.log(error);
+//     bot.sendMessage(chatId, 'Пари відсутні');
+//   }
+// });
+
+// bot.onText(/\/pizdec/, (msg) => {
+//   const chatId = msg.chat.id;
+//   const sessionStartDate = new Date(2024, 0, 8);
+//   const currentDate = new Date();
+//   const diffrenceInMilliseconds = sessionStartDate - currentDate;
+//   const diffrenceInDays = Math.ceil(
+//       diffrenceInMilliseconds / (1000 * 60 * 60 * 24));
+//   bot.sendMessage(chatId, `Нам всім пиздець через 
+//   ${diffrenceInDays} днів (екзамени)`);
+// });
 
 bot.onText(/\/current/, async (msg) => {
   const chatId = msg.chat.id;
@@ -169,12 +173,12 @@ bot.onText(/\/current/, async (msg) => {
 });
 
 
-bot.onText(/\/calendar/, async (msg) => {
-  const chatId = msg.chat.id;
-  const photo = 'https://photos.app.goo.gl/2B9Fn21yTMqtNQPT9'
-  console.log(photo);
-  bot.sendPhoto(chatId, photo, {caption: 'Календар - 2023/2024'});
-});
+// bot.onText(/\/calendar/, async (msg) => {
+//   const chatId = msg.chat.id;
+//   const photo = 'https://photos.app.goo.gl/2B9Fn21yTMqtNQPT9'
+//   console.log(photo);
+//   bot.sendPhoto(chatId, photo, {caption: 'Календар - 2023/2024'});
+// });
 
 
 

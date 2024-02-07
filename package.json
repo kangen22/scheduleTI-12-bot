@@ -20,7 +20,8 @@
     "node-fetch": "^3.3.2",
     "node-telegram-bot-api": "^0.63.0",
     "nodemon": "^3.0.1",
-    "objectid": "^3.2.1"
+    "objectid": "^3.2.1",
+    "pg": "^8.11.3"
   },
   "devDependencies": {
     "eslint": "^8.52.0",
