@@ -2,7 +2,7 @@ import TelegramApi from 'node-telegram-bot-api'
 import fetch from 'node-fetch';
 import dotenv from 'dotenv';
 import { formatLesson, formatSchedule } from './lib/scheduleForm.js';
-import { getCurrentWeek, getDayName, getCurrentLesson, getNextLesson } from './lib/get.js';
+// import { getCurrentWeek, getDayName, getCurrentLesson, getNextLesson } from './lib/get.js';
 
 
 dotenv.config();
@@ -82,19 +82,18 @@ bot.onText(/\/next/, async (msg) => {
 })
 
 bot.onText(/\/timeleft/, async (msg) => {
-    const chatId = msg.chat.id;
-    try {
-      const response = await fetch('http://localhost:3000/timeleft');
-      const data = await response.json();
-      console.log(data)
-      if (data) {
-        const timeLeft = `До кінця пари залишилось ${data} хвилин`;
-        bot.sendMessage(chatId, timeLeft);
-      }
-    } catch (error){
-      bot.sendMessage(chatId, 'Пари відсутні')
-    }
-})
+  const chatId = msg.chat.id;
+  try {
+    const response = await fetch('http://localhost:3000/timeleft');
+    const data = await response.text(); 
+    console.log(data);
+    bot.sendMessage(chatId, data);
+  } catch (error){
+    console.error('Error fetching data:', error);
+    bot.sendMessage(chatId, 'Помилка при отриманні даних. Будь ласка, спробуйте пізніше.');
+  }
+});
+
 
 bot.onText(/\/schedule/, (msg, match) => {
     const chatId = msg.chat.id;

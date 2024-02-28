@@ -1,5 +1,5 @@
 import express from 'express';
-import { getCurrentWeek, getDayName, getCurrentLesson, getNextLesson, getTimeLeft } from './lib/get.js';
+import { getCurrentWeek, getDayName, getCurrentLesson, getNextLesson, getTimeLeft, getTimeUntilNextLesson } from './lib/get.js';
 import getSchedule from './db_connect.js'
 
 const port = 3000
@@ -78,26 +78,33 @@ app.get('/schedule/:dayOfWeek', async (req, res ) => {
     }
 });
 
-app.get('/timeleft', async (req, res ) => {
+app.get('/timeleft', async (req, res) => {
     const date = new Date();
     const currentWeek = getCurrentWeek();
     const requestedDay = getDayName(date.getDay());
     try {
-    const model = await getSchedule(requestedDay, currentWeek);
-    const currentLesson = getCurrentLesson(model, date);
-    const lessonName = currentLesson['lesson_name'];
-    const timeLeftInMinutes = await getTimeLeft(currentLesson, date);
-    if (timeLeftInMinutes > 0) {
-        res.send(timeLeftInMinutes.toString());
-    } else {
-        res.send(`${lessonName} Закінчилась`);
-    }
-    }
-    catch (error) {
+        const model = await getSchedule(requestedDay, currentWeek);
+        const currentLesson = getCurrentLesson(model, date);
+        const nextLesson = getNextLesson(model, date);
+        const nextLessonName = nextLesson ? nextLesson['lesson_name'] : '';
+        const lessonName = currentLesson ? currentLesson['lesson_name'] : '';
+        const timeLeftInMinutes = currentLesson ? await getTimeLeft(currentLesson, date) : null;
+        if (timeLeftInMinutes && parseInt(timeLeftInMinutes) > 0) {
+            res.send(`${timeLeftInMinutes} хвилин до кінця пари "${lessonName}"`);
+        } else {
+            const timeUntilNextLesson = await getTimeUntilNextLesson(currentLesson, date, model);
+            if (timeUntilNextLesson) {
+                res.send(`Перерва. Наступна пара "${nextLessonName}" почнеться через ${timeUntilNextLesson} хвилин`);
+            } else {
+                res.send('Пари закінчились на сьогодні');
+            }
+        }
+    } catch (error) {
         console.error("Error fetching data:", error);
-        
+        res.status(500).send('Internal Server Error'); // Обработка ошибок
     }
-})
+});
+
 
 app.listen(port, () => {
     console.log(`Server is running on port: ${port}`);
