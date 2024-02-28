@@ -2,7 +2,7 @@ import express from 'express';
 import { getCurrentWeek, getDayName, getCurrentLesson, getNextLesson, getTimeLeft, getTimeUntilNextLesson } from './lib/get.js';
 import getSchedule from './db_connect.js'
 
-const port = 3000
+const port = process.env.PORT || 3000
 
 const app = express();
 
