@@ -1,4 +1,3 @@
-
 import pg from 'pg';
 import queryText from './db/schema.js';
 import dotenv from 'dotenv';
@@ -7,15 +6,15 @@ dotenv.config();
 
 let model = [];
 
-const password = process.env.DB_PASSWORD;
-const database = process.env.DB_NAME;
-const user = process.env.DB_USER;
+// Извлекаем URL базы данных из переменных окружения
+const connectionString = process.env.DATABASE_URL;
+
+// Создаем конфигурацию клиента с использованием строки подключения
 const client = new pg.Client({
-    user: user,
-    host: 'localhost',
-    database: database,
-    password: password,
-    port: 5432,
+    connectionString,
+    ssl: {
+        rejectUnauthorized: false // Это необходимо для Heroku, чтобы обойти проверку SSL
+    }
 });
 
 client.connect();
