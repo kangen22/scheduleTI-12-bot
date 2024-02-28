@@ -8,6 +8,7 @@ import { formatLesson, formatSchedule } from './lib/scheduleForm.js';
 dotenv.config();
 
 const token = process.env.TELEGRAM_KEY;
+const API_URL = process.env.API_URL;
 
 const bot = new TelegramApi(token, {polling: true});
 
@@ -27,10 +28,11 @@ bot.onText(/\/start/, (msg) => {
     bot.sendMessage(chatId, message);
   });
 
+
 bot.onText(/\/today/, async (msg) => {
     const chatId = msg.chat.id;
     try {
-        const response = await fetch('http://localhost:3000/today');
+        const response = await fetch(`${API_URL}/today`);
         const data = await response.json();
         const schedule = formatSchedule(data);
         bot.sendMessage(chatId, schedule);
@@ -42,7 +44,7 @@ bot.onText(/\/today/, async (msg) => {
 bot.onText(/\/tomorrow/, async (msg) => {
     const chatId = msg.chat.id;
     try {
-        const response = await fetch('http://localhost:3000/tomorrow');
+        const response = await fetch(`${API_URL}/tomorrow`);
         const data = await response.json();
         const schedule = formatSchedule(data);
         bot.sendMessage(chatId, schedule);
@@ -55,7 +57,7 @@ bot.onText(/\/tomorrow/, async (msg) => {
 bot.onText(/\/current/, async (msg) => {
     const chatId = msg.chat.id;
     try {
-        const response = await fetch('http://localhost:3000/current');
+        const response = await fetch(`${API_URL}/current`);
         const data = await response.json();
         const schedule = formatLesson(data);
         bot.sendMessage(chatId, schedule);
@@ -67,7 +69,7 @@ bot.onText(/\/current/, async (msg) => {
 bot.onText(/\/next/, async (msg) => {
     const chatId = msg.chat.id;
     try {
-        const response = await fetch('http://localhost:3000/next');
+        const response = await fetch(`${API_URL}/next`);
         const data = await response.json();
         console.log(data);
         if (data) {
@@ -84,7 +86,7 @@ bot.onText(/\/next/, async (msg) => {
 bot.onText(/\/timeleft/, async (msg) => {
   const chatId = msg.chat.id;
   try {
-    const response = await fetch('http://localhost:3000/timeleft');
+    const response = await fetch(`${API_URL}/timeleft`);
     const data = await response.text(); 
     console.log(data);
     bot.sendMessage(chatId, data);
@@ -117,7 +119,7 @@ bot.onText(/\/schedule/, (msg, match) => {
     const requestedDay = query.data;
 
     try {
-      const response = await fetch(`http://localhost:3000/schedule/${requestedDay}`);
+      const response = await fetch(`${API_URL}/schedule/${requestedDay}`);
       const data = await response.json();
       if (data) {
         const scheduleMessage = formatSchedule(data);
