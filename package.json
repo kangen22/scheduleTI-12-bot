@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "concurrently \"nodemon bot.js\" \"nodemon app.js\" \"nodemon db_connect.js\"",
+    "start": "concurrently \"node bot.js\" \"node app.js\" \"node db_connect.js\"",
     "lint": "eslint bot.js lib"
   },
   "keywords": [],
