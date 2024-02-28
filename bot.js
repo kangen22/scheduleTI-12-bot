@@ -134,5 +134,9 @@ bot.onText(/\/schedule/, (msg, match) => {
   })
   
   bot.on('polling_error', (error) => {
-    console.log(error.code);
-  });
+    if (error.code !== 'EFATAL') {
+        console.log('Non-fatal polling error:', error);
+    } else {
+        console.error('Fatal polling error:', error);
+    }
+});
