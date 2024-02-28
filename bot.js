@@ -34,7 +34,7 @@ bot.onText(/\/today/, async (msg) => {
     try {
         const response = await fetch(`${API_URL}/today`);
         const data = await response.json();
-        const schedule = formatSchedule(data);
+        const schedule = await formatSchedule(data);
         bot.sendMessage(chatId, schedule);
     } catch (error) {
         console.log(error);
@@ -46,7 +46,7 @@ bot.onText(/\/tomorrow/, async (msg) => {
     try {
         const response = await fetch(`${API_URL}/tomorrow`);
         const data = await response.json();
-        const schedule = formatSchedule(data);
+        const schedule =  await formatSchedule(data);
         bot.sendMessage(chatId, schedule);
     } catch (error) {
         console.log(error);
@@ -59,7 +59,7 @@ bot.onText(/\/current/, async (msg) => {
     try {
         const response = await fetch(`${API_URL}/current`);
         const data = await response.json();
-        const schedule = formatLesson(data);
+        const schedule = await formatLesson(data);
         bot.sendMessage(chatId, schedule);
     } catch (error) {
         console.log(error);
@@ -73,7 +73,7 @@ bot.onText(/\/next/, async (msg) => {
         const data = await response.json();
         console.log(data);
         if (data) {
-            const schedule = formatLesson(data);
+            const schedule = await formatLesson(data);
             bot.sendMessage(chatId, schedule);
         } else {
             bot.sendMessage(chatId, 'Немає наступних пар сьогодні');
@@ -88,11 +88,10 @@ bot.onText(/\/timeleft/, async (msg) => {
   try {
     const response = await fetch(`${API_URL}/timeleft`);
     const data = await response.text(); 
-    console.log(data);
     bot.sendMessage(chatId, data);
   } catch (error){
     console.error('Error fetching data:', error);
-    bot.sendMessage(chatId, 'Помилка при отриманні даних. Будь ласка, спробуйте пізніше.');
+    // bot.sendMessage(chatId, 'Помилка при отриманні даних. Будь ласка, спробуйте пізніше.');
   }
 });
 
@@ -122,14 +121,13 @@ bot.onText(/\/schedule/, (msg, match) => {
       const response = await fetch(`${API_URL}/schedule/${requestedDay}`);
       const data = await response.json();
       if (data) {
-        const scheduleMessage = formatSchedule(data);
+        const scheduleMessage = await formatSchedule(data);
         bot.sendMessage(chatId, scheduleMessage);
       } else {
         bot.sendMessage(chatId, 'Немає пар на цей день');
       }
       } 
     catch (error) {
-        console.log(error);
         bot.sendMessage(chatId, 'Помилка');
       }
       bot.answerCallbackQuery(query.id), {text: `Обрано ${requestedDay}`};
