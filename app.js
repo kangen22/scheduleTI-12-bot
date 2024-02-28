@@ -1,23 +1,10 @@
-import pg from 'pg';
 import express from 'express';
-import { getCurrentWeek, getDayName, getCurrentLesson, getNextLesson } from './lib/get.js';
-
+import { getCurrentWeek, getDayName, getCurrentLesson, getNextLesson, getTimeLeft } from './lib/get.js';
+import getSchedule from './db_connect.js'
 
 const port = 3000
 
 const app = express();
-
-let model = [];
-
-const client = new pg.Client({
-    user: 'postgres',
-    host: 'localhost',
-    database: 'University Schedule',
-    password: '23022004',
-    port: 5432,
-});
-
-client.connect();
 
 app.get('/today', async (req, res ) => {
     const date = new Date();
@@ -25,36 +12,8 @@ app.get('/today', async (req, res ) => {
     const requestedDay = getDayName(date.getDay());
     const currentWeek = getCurrentWeek();
     try {
-        const queryText = `
-    SELECT 
-        sch.id AS schedule_id,
-        les.l_name AS lesson_name,
-        dow.day AS day_of_week,
-        wks.week AS week_number,
-        tch.t_name AS teacher_name,
-        tch.t_number AS teacher_number,
-        tch.degree AS teacher_degree,
-        tms.start_time,
-        tms.end_time,
-        fmt.format,
-        fmt.mode
-    FROM 
-        schedule_ti_12 sch
-        INNER JOIN lessons les ON sch.lessons_id = les.id
-        INNER JOIN days_of_week dow ON sch.day_id = dow.id
-        INNER JOIN weeks wks ON sch.week_id = wks.id
-        INNER JOIN teachers tch ON sch.teacher_id = tch.id
-        INNER JOIN times tms ON sch.time_id = tms.id
-        INNER JOIN formats fmt ON sch.format_id = fmt.id
-    WHERE 
-        dow.day = $1 AND wks.week = $2;
-    
-    `;
-    const queryResult = await client.query(queryText, [requestedDay, currentWeek]);     
-    model = queryResult.rows;
+    const model = await getSchedule(requestedDay, currentWeek);
     res.json(model);
-    console.log(requestedDay);
-    console.log(currentWeek);
 } catch (error) {
     console.error("Error fetching data:", error);
     res.status(500).send('Error fetching data');
@@ -67,33 +26,7 @@ app.get('/tomorrow', async (req, res ) => {
     const requestedDay = getDayName(date.getDay());
     const currentWeek = getCurrentWeek();
     try {
-        const queryText = `
-    SELECT 
-        sch.id AS schedule_id,
-        les.l_name AS lesson_name,
-        dow.day AS day_of_week,
-        wks.week AS week_number,
-        tch.t_name AS teacher_name,
-        tch.t_number AS teacher_number,
-        tch.degree AS teacher_degree,
-        tms.start_time,
-        tms.end_time,
-        fmt.format,
-        fmt.mode
-    FROM 
-        schedule_ti_12 sch
-        INNER JOIN lessons les ON sch.lessons_id = les.id
-        INNER JOIN days_of_week dow ON sch.day_id = dow.id
-        INNER JOIN weeks wks ON sch.week_id = wks.id
-        INNER JOIN teachers tch ON sch.teacher_id = tch.id
-        INNER JOIN times tms ON sch.time_id = tms.id
-        INNER JOIN formats fmt ON sch.format_id = fmt.id
-    WHERE 
-        dow.day = $1 AND wks.week = $2;
-    
-    `;
-    const queryResult = await client.query(queryText, [requestedDay, currentWeek]);     
-    model = queryResult.rows;
+    const model = await getSchedule(requestedDay, currentWeek);
     res.json(model);
     console.log(requestedDay);
     console.log(currentWeek);
@@ -109,40 +42,12 @@ app.get('/current', async (req, res ) => {
     date.setDate(date.getDate());
     const requestedDay = getDayName(date.getDay());
     try {
-        const queryText = `
-    SELECT 
-        sch.id AS schedule_id,
-        les.l_name AS lesson_name,
-        dow.day AS day_of_week,
-        wks.week AS week_number,
-        tch.t_name AS teacher_name,
-        tch.t_number AS teacher_number,
-        tch.degree AS teacher_degree,
-        tms.start_time,
-        tms.end_time,
-        fmt.format,
-        fmt.mode
-    FROM 
-        schedule_ti_12 sch
-        INNER JOIN lessons les ON sch.lessons_id = les.id
-        INNER JOIN days_of_week dow ON sch.day_id = dow.id
-        INNER JOIN weeks wks ON sch.week_id = wks.id
-        INNER JOIN teachers tch ON sch.teacher_id = tch.id
-        INNER JOIN times tms ON sch.time_id = tms.id
-        INNER JOIN formats fmt ON sch.format_id = fmt.id
-    WHERE 
-        dow.day = $1 AND wks.week = $2;
-    
-    `;
-    const queryResult = await client.query(queryText, [requestedDay, currentWeek]);     
-    model = queryResult.rows;
+    const model = await getSchedule(requestedDay, currentWeek);
     const currentLesson = getCurrentLesson(model, date);
     res.json(currentLesson);
-    console.log(currentLesson);
-    console.log(requestedDay);
-    console.log(currentWeek);
-    } catch (error) {
-        console.error("Error fetching data:", error);
+} catch (error) {
+    console.error("Error fetching data:", error);
+    res.status(500).send('Error fetching data');
     }
 });
 
@@ -152,43 +57,49 @@ app.get('/next', async (req, res ) => {
     date.setDate(date.getDate());
     const requestedDay = getDayName(date.getDay());
     try {
-        const queryText = `
-    SELECT 
-        sch.id AS schedule_id,
-        les.l_name AS lesson_name,
-        dow.day AS day_of_week,
-        wks.week AS week_number,
-        tch.t_name AS teacher_name,
-        tch.t_number AS teacher_number,
-        tch.degree AS teacher_degree,
-        tms.start_time,
-        tms.end_time,
-        fmt.format,
-        fmt.mode
-    FROM 
-        schedule_ti_12 sch
-        INNER JOIN lessons les ON sch.lessons_id = les.id
-        INNER JOIN days_of_week dow ON sch.day_id = dow.id
-        INNER JOIN weeks wks ON sch.week_id = wks.id
-        INNER JOIN teachers tch ON sch.teacher_id = tch.id
-        INNER JOIN times tms ON sch.time_id = tms.id
-        INNER JOIN formats fmt ON sch.format_id = fmt.id
-    WHERE 
-        dow.day = $1 AND wks.week = $2;
-    
-    `;
-    const queryResult = await client.query(queryText, [requestedDay, currentWeek]);     
-    model = queryResult.rows;
+    const model = await getSchedule(requestedDay, currentWeek);
     const nextLesson = getNextLesson(model, date);
     res.json(nextLesson);
-    console.log(nextLesson);
-    console.log(requestedDay);
-    console.log(currentWeek);
     } catch (error) {
         console.error("Error fetching data:", error);
+        res.status(500).send('Error fetching data');
     }
 });
+
+app.get('/schedule/:dayOfWeek', async (req, res ) => {
+    const dayOfWeek = req.params.dayOfWeek
+    const currentWeek = getCurrentWeek();
+    try {
+    const model = await getSchedule(dayOfWeek, currentWeek);    
+    res.json(model);
+    } catch (error) {
+        console.error("Error fetching data:", error);
+        res.status(500).send('Error fetching data');
+    }
+});
+
+app.get('/timeleft', async (req, res ) => {
+    const date = new Date();
+    const currentWeek = getCurrentWeek();
+    const requestedDay = getDayName(date.getDay());
+    try {
+    const model = await getSchedule(requestedDay, currentWeek);
+    const currentLesson = getCurrentLesson(model, date);
+    const lessonName = currentLesson['lesson_name'];
+    const timeLeftInMinutes = await getTimeLeft(currentLesson, date);
+    if (timeLeftInMinutes > 0) {
+        res.send(timeLeftInMinutes.toString());
+    } else {
+        res.send(`${lessonName} Закінчилась`);
+    }
+    }
+    catch (error) {
+        console.error("Error fetching data:", error);
+        
+    }
+})
 
 app.listen(port, () => {
     console.log(`Server is running on port: ${port}`);
 });
+

@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "concurrently \"nodemon bot.js\" \"nodemon app.js\"",
+    "start": "concurrently \"nodemon bot.js\" \"nodemon app.js\" \"nodemon db_connect.js\"",
     "lint": "eslint bot.js lib"
   },
   "keywords": [],
@@ -19,12 +19,13 @@
     "mongodb": "^6.3.0",
     "node-fetch": "^3.3.2",
     "node-telegram-bot-api": "^0.63.0",
-    "nodemon": "^3.0.1",
     "objectid": "^3.2.1",
     "pg": "^8.11.3"
   },
   "devDependencies": {
+    "concurrently": "^8.2.2",
     "eslint": "^8.52.0",
-    "eslint-config-google": "^0.14.0"
+    "eslint-config-google": "^0.14.0",
+    "nodemon": "^3.1.0"
   }
 }
