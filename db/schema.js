@@ -4,6 +4,7 @@ SELECT
     les.l_name AS lesson_name,
     dow.day AS day_of_week,
     wks.week AS week_number,
+    lnk.link as link, 
     tch.t_name AS teacher_name,
     tch.t_number AS teacher_number,
     tch.degree AS teacher_degree,
@@ -19,6 +20,7 @@ FROM
     INNER JOIN teachers tch ON sch.teacher_id = tch.id
     INNER JOIN times tms ON sch.time_id = tms.id
     INNER JOIN formats fmt ON sch.format_id = fmt.id
+    INNER JOIN lesson_links lnk ON sch.link_id = lnk.id
 WHERE 
     dow.day = $1 AND wks.week = $2;
 `;

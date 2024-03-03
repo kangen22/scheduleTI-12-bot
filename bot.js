@@ -2,7 +2,6 @@ import TelegramApi from 'node-telegram-bot-api'
 import fetch from 'node-fetch';
 import dotenv from 'dotenv';
 import { formatLesson, formatSchedule } from './lib/scheduleForm.js';
-// import { getCurrentWeek, getDayName, getCurrentLesson, getNextLesson } from './lib/get.js';
 
 
 dotenv.config();
