@@ -70,7 +70,6 @@ bot.onText(/\/next/, async (msg) => {
     try {
         const response = await fetch(`${API_URL}/next`);
         const data = await response.json();
-        console.log(data);
         if (data) {
             const schedule = formatLesson(data);
             bot.sendMessage(chatId, schedule);
@@ -90,7 +89,7 @@ bot.onText(/\/timeleft/, async (msg) => {
     bot.sendMessage(chatId, data);
   } catch (error){
     console.error('Error fetching data:', error);
-    // bot.sendMessage(chatId, 'Помилка при отриманні даних. Будь ласка, спробуйте пізніше.');
+    bot.sendMessage(chatId, 'Помилка при отриманні даних. Будь ласка, спробуйте пізніше.');
   }
 });
 
