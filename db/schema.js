@@ -8,6 +8,7 @@ SELECT
     tch.t_name AS teacher_name,
     tch.t_number AS teacher_number,
     tch.degree AS teacher_degree,
+	room_num as room,
     tms.start_time,
     tms.end_time,
     fmt.format,
@@ -21,6 +22,7 @@ FROM
     INNER JOIN times tms ON sch.time_id = tms.id
     INNER JOIN formats fmt ON sch.format_id = fmt.id
     LEFT JOIN lesson_links lnk ON sch.link_id = lnk.id
+	LEFT JOIN room ON sch.room_id = room.id
 WHERE 
     dow.day = $1 AND wks.week = $2;
 `;
