@@ -20,7 +20,7 @@ FROM
     INNER JOIN teachers tch ON sch.teacher_id = tch.id
     INNER JOIN times tms ON sch.time_id = tms.id
     INNER JOIN formats fmt ON sch.format_id = fmt.id
-    INNER JOIN lesson_links lnk ON sch.link_id = lnk.id
+    LEFT JOIN lesson_links lnk ON sch.link_id = lnk.id
 WHERE 
     dow.day = $1 AND wks.week = $2;
 `;
